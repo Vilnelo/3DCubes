@@ -13,7 +13,7 @@ namespace Core.GridSystem.External
             {
                 material = CreateMaterial(color);
                 m_CachedMaterials[colorCode] = material;
-                
+
                 Debug.Log($"[MaterialCache] Created material for color code: {colorCode}, color: {color}");
             }
 
@@ -36,7 +36,7 @@ namespace Core.GridSystem.External
                     Object.DestroyImmediate(material);
                 }
             }
-            
+
             m_CachedMaterials.Clear();
             Debug.Log("[MaterialCache] Cleared all materials");
         }

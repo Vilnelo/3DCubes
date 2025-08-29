@@ -14,11 +14,14 @@ namespace Core.Installers
             Container.BindInterfacesTo<MainCanvas>()
                 .FromComponentInHierarchy()
                 .AsSingle();
-            
+
             Container.BindInterfacesTo<GridConfigSystem>()
                 .FromNewComponentOnNewGameObject()
                 .AsSingle();
-            
+
+            Container.BindInterfacesAndSelfTo<GridNavigationService>()
+                .AsSingle();
+
             Container.BindInterfacesTo<GridVisualizationSystem>()
                 .FromNewComponentOnNewGameObject()
                 .AsSingle();

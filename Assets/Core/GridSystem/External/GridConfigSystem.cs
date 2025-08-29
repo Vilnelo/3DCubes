@@ -46,7 +46,7 @@ namespace Core.GridSystem.External
 
             m_GridData = parseResult.Object;
             m_IsLoaded = true;
-            
+
             Debug.Log($"[GridConfigSystem] Loaded grid data: {m_GridData.Width}x{m_GridData.Height}");
         }
 
@@ -111,6 +111,7 @@ namespace Core.GridSystem.External
                 Debug.LogError("[GridConfigSystem] Grid data is not loaded");
                 return false;
             }
+
             return true;
         }
 
@@ -124,6 +125,7 @@ namespace Core.GridSystem.External
                 Debug.LogError($"[GridConfigSystem] Invalid index: {index}. Valid range: 0-{m_GridData.TotalSize - 1}");
                 return false;
             }
+
             return true;
         }
     }

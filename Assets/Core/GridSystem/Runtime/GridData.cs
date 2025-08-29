@@ -20,7 +20,7 @@
         }
 
         public int GetValue(int index) => m_FlatData[index];
-        
+
         public int GetValue(int x, int y) => m_FlatData[y * m_Width + x];
 
         public int MoveUp(int currentIndex)
@@ -66,7 +66,7 @@
                     var targetX = WrapCoordinate(centerX + dx, m_Width);
                     var targetY = WrapCoordinate(centerY + dy, m_Height);
                     var targetIndex = targetY * m_Width + targetX;
-                    
+
                     result[resultIndex] = m_FlatData[targetIndex];
                     resultIndex++;
                 }
