@@ -1,0 +1,11 @@
+﻿{
+  "gridSize": 3,
+  "cubeScale": 1.0,
+  "spacing": 1.5,
+  "colorMappings": {
+    "1": "#FF0000",
+    "2": "#FFFF00",
+    "3": "#0000FF",
+    "4": "#800080"
+  }
+}

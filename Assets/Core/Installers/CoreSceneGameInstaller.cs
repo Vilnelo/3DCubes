@@ -1,6 +1,5 @@
 using Common.Canvases.External;
 using Core.GridSystem.External;
-using Core.GridSystem.Runtime;
 using UnityEngine;
 using Zenject;
 
@@ -17,6 +16,10 @@ namespace Core.Installers
                 .AsSingle();
             
             Container.BindInterfacesTo<GridConfigSystem>()
+                .FromNewComponentOnNewGameObject()
+                .AsSingle();
+            
+            Container.BindInterfacesTo<GridVisualizationSystem>()
                 .FromNewComponentOnNewGameObject()
                 .AsSingle();
 
