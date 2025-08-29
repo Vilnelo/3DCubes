@@ -52,11 +52,8 @@ namespace Core.GridSystem.External
 
         public Result<int> GetRandomValidIndex()
         {
-            if (m_GridData == null)
-            {
-                Debug.LogError("[GridConfigSystem] Grid data is not loaded");
+            if (!ValidateGridData())
                 return Result<int>.Fail();
-            }
 
             var randomIndex = Random.Range(0, m_GridData.TotalSize);
             return Result<int>.Success(randomIndex);
@@ -64,17 +61,8 @@ namespace Core.GridSystem.External
 
         public Result<int[]> GetViewportData(int centerIndex, int viewportSize)
         {
-            if (m_GridData == null)
-            {
-                Debug.LogError("[GridConfigSystem] Grid data is not loaded");
+            if (!ValidateIndex(centerIndex))
                 return Result<int[]>.Fail();
-            }
-
-            if (centerIndex < 0 || centerIndex >= m_GridData.TotalSize)
-            {
-                Debug.LogError($"[GridConfigSystem] Invalid center index: {centerIndex}. Valid range: 0-{m_GridData.TotalSize - 1}");
-                return Result<int[]>.Fail();
-            }
 
             var viewportData = m_GridData.GetAreaAround(centerIndex, viewportSize);
             return Result<int[]>.Success(viewportData);
@@ -82,17 +70,8 @@ namespace Core.GridSystem.External
 
         public Result<int> NavigateUp(int currentIndex)
         {
-            if (m_GridData == null)
-            {
-                Debug.LogError("[GridConfigSystem] Grid data is not loaded");
+            if (!ValidateIndex(currentIndex))
                 return Result<int>.Fail();
-            }
-
-            if (currentIndex < 0 || currentIndex >= m_GridData.TotalSize)
-            {
-                Debug.LogError($"[GridConfigSystem] Invalid current index: {currentIndex}. Valid range: 0-{m_GridData.TotalSize - 1}");
-                return Result<int>.Fail();
-            }
 
             var newIndex = m_GridData.MoveUp(currentIndex);
             return Result<int>.Success(newIndex);
@@ -100,17 +79,8 @@ namespace Core.GridSystem.External
 
         public Result<int> NavigateDown(int currentIndex)
         {
-            if (m_GridData == null)
-            {
-                Debug.LogError("[GridConfigSystem] Grid data is not loaded");
+            if (!ValidateIndex(currentIndex))
                 return Result<int>.Fail();
-            }
-
-            if (currentIndex < 0 || currentIndex >= m_GridData.TotalSize)
-            {
-                Debug.LogError($"[GridConfigSystem] Invalid current index: {currentIndex}. Valid range: 0-{m_GridData.TotalSize - 1}");
-                return Result<int>.Fail();
-            }
 
             var newIndex = m_GridData.MoveDown(currentIndex);
             return Result<int>.Success(newIndex);
@@ -118,17 +88,8 @@ namespace Core.GridSystem.External
 
         public Result<int> NavigateLeft(int currentIndex)
         {
-            if (m_GridData == null)
-            {
-                Debug.LogError("[GridConfigSystem] Grid data is not loaded");
+            if (!ValidateIndex(currentIndex))
                 return Result<int>.Fail();
-            }
-
-            if (currentIndex < 0 || currentIndex >= m_GridData.TotalSize)
-            {
-                Debug.LogError($"[GridConfigSystem] Invalid current index: {currentIndex}. Valid range: 0-{m_GridData.TotalSize - 1}");
-                return Result<int>.Fail();
-            }
 
             var newIndex = m_GridData.MoveLeft(currentIndex);
             return Result<int>.Success(newIndex);
@@ -136,20 +97,34 @@ namespace Core.GridSystem.External
 
         public Result<int> NavigateRight(int currentIndex)
         {
-            if (m_GridData == null)
-            {
-                Debug.LogError("[GridConfigSystem] Grid data is not loaded");
+            if (!ValidateIndex(currentIndex))
                 return Result<int>.Fail();
-            }
-
-            if (currentIndex < 0 || currentIndex >= m_GridData.TotalSize)
-            {
-                Debug.LogError($"[GridConfigSystem] Invalid current index: {currentIndex}. Valid range: 0-{m_GridData.TotalSize - 1}");
-                return Result<int>.Fail();
-            }
 
             var newIndex = m_GridData.MoveRight(currentIndex);
             return Result<int>.Success(newIndex);
+        }
+
+        private bool ValidateGridData()
+        {
+            if (m_GridData == null)
+            {
+                Debug.LogError("[GridConfigSystem] Grid data is not loaded");
+                return false;
+            }
+            return true;
+        }
+
+        private bool ValidateIndex(int index)
+        {
+            if (!ValidateGridData())
+                return false;
+
+            if (index < 0 || index >= m_GridData.TotalSize)
+            {
+                Debug.LogError($"[GridConfigSystem] Invalid index: {index}. Valid range: 0-{m_GridData.TotalSize - 1}");
+                return false;
+            }
+            return true;
         }
     }
 }
