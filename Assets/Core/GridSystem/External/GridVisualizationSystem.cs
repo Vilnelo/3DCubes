@@ -1,8 +1,10 @@
 ﻿using System;
 using Common.AssetManagement.External;
 using Common.ConfigSystem.Runtime;
+using Common.InputSystem.Runtime;
 using Core.GridSystem.Runtime;
 using Core.GridSystem.Runtime.Dto;
+using UniRx;
 using UnityEngine;
 using Zenject;
 
@@ -10,19 +12,22 @@ namespace Core.GridSystem.External
 {
     public class GridVisualizationSystem : MonoBehaviour, IGridVisualizationSystem, IInitializable, IDisposable
     {
-        private const string GRID_CONTAINER_KEY = "GridContainer";
-        private const string CUBE_PREFAB_KEY = "CubePrefab";
-        private const string CONFIG_KEY = "GridConfig";
+        private const string m_GridContainerKey = "GridContainer";
+        private const string m_CubePrefabKey = "CubePrefab";
+        private const string m_ConfigKey = "GridConfig";
 
         [Inject] private IAssetLoader m_AssetLoader;
         [Inject] private IConfigLoader m_ConfigLoader;
         [Inject] private IGridConfigSystem m_GridSystem;
+        [Inject] private IInputService m_InputService;
 
         private GridVisualConfigDto m_VisualConfig;
         private MaterialCache m_MaterialCache;
         private GameObject m_GridContainer;
         private GameObject[] m_CubeInstances;
+        private CompositeDisposable m_Disposables;
         private bool m_IsInitialized;
+        private int m_CurrentIndex;
 
         public bool IsInitialized => m_IsInitialized;
 
@@ -31,13 +36,16 @@ namespace Core.GridSystem.External
             Debug.Log("[GridVisualizationSystem] Initializing...");
             
             m_MaterialCache = new MaterialCache();
+            m_Disposables = new CompositeDisposable();
             LoadVisualConfig();
             
             if (m_VisualConfig != null)
             {
                 CreateGridContainer();
                 CreateCubeGrid();
+                SetupInputListeners();
                 m_IsInitialized = true;
+                ShowRandomInitialViewport();
                 
                 Debug.Log("[GridVisualizationSystem] Initialization complete");
             }
@@ -51,7 +59,7 @@ namespace Core.GridSystem.External
         {
             try
             {
-                m_VisualConfig = m_ConfigLoader.GetConfig<GridVisualConfigDto>(CONFIG_KEY);
+                m_VisualConfig = m_ConfigLoader.GetConfig<GridVisualConfigDto>(m_ConfigKey);
                 if (m_VisualConfig != null)
                 {
                     Debug.Log($"[GridVisualizationSystem] Visual config loaded - Grid Size: {m_VisualConfig.GridSize}");
@@ -65,7 +73,7 @@ namespace Core.GridSystem.External
 
         private void CreateGridContainer()
         {
-            var containerPrefab = m_AssetLoader.LoadSync<GameObject>(GRID_CONTAINER_KEY);
+            var containerPrefab = m_AssetLoader.LoadSync<GameObject>(m_GridContainerKey);
             if (containerPrefab == null)
             {
                 Debug.LogError("[GridVisualizationSystem] Failed to load GridContainer prefab");
@@ -94,7 +102,7 @@ namespace Core.GridSystem.External
         private void PositionCamera(Camera camera)
         {
             var gridWorldSize = (m_VisualConfig.GridSize - 1) * m_VisualConfig.Spacing;
-            var cameraDistance = gridWorldSize * 1.5f; // Отступ для полного обзора
+            var cameraDistance = gridWorldSize * 1.5f;
     
             camera.transform.position = new Vector3(0, cameraDistance, -cameraDistance);
             camera.transform.LookAt(m_GridContainer.transform.position);
@@ -108,7 +116,7 @@ namespace Core.GridSystem.External
                 return;
             }
 
-            var cubePrefab = m_AssetLoader.LoadSync<GameObject>(CUBE_PREFAB_KEY);
+            var cubePrefab = m_AssetLoader.LoadSync<GameObject>(m_CubePrefabKey);
             if (cubePrefab == null)
             {
                 Debug.LogError("[GridVisualizationSystem] Failed to load CubePrefab");
@@ -124,9 +132,9 @@ namespace Core.GridSystem.External
             for (var i = 0; i < totalCubes; i++)
             {
                 var x = i % m_VisualConfig.GridSize;
-                var z = i / m_VisualConfig.GridSize;
+                var z = (m_VisualConfig.GridSize - 1) - (i / m_VisualConfig.GridSize);
 
-                var cubeInstance = UnityEngine.Object.Instantiate(cubePrefab, m_GridContainer.transform);
+                var cubeInstance = Instantiate(cubePrefab, m_GridContainer.transform);
                 cubeInstance.name = $"Cube_{x}_{z}";
                 
                 var worldPos = new Vector3(
@@ -142,6 +150,82 @@ namespace Core.GridSystem.External
             }
 
             Debug.Log($"[GridVisualizationSystem] Created {totalCubes} cubes in {m_VisualConfig.GridSize}x{m_VisualConfig.GridSize} grid");
+        }
+
+        private void SetupInputListeners()
+        {
+            if (!m_GridSystem.IsLoaded) return;
+
+            m_InputService.OnUpPressed.Subscribe(_ => OnNavigateUp()).AddTo(m_Disposables);
+            m_InputService.OnDownPressed.Subscribe(_ => OnNavigateDown()).AddTo(m_Disposables);
+            m_InputService.OnLeftPressed.Subscribe(_ => OnNavigateLeft()).AddTo(m_Disposables);
+            m_InputService.OnRightPressed.Subscribe(_ => OnNavigateRight()).AddTo(m_Disposables);
+
+            Debug.Log("[GridVisualizationSystem] Input listeners setup complete");
+        }
+
+        private void ShowRandomInitialViewport()
+        {
+            var indexResult = m_GridSystem.GetRandomValidIndex();
+            if (indexResult.IsExist)
+            {
+                m_CurrentIndex = indexResult.Object;
+                Debug.Log($"[GridVisualizationSystem] Initial random index: {m_CurrentIndex}");
+                UpdateCurrentViewport();
+            }
+        }
+
+        private void OnNavigateUp()
+        {
+            var result = m_GridSystem.NavigateUp(m_CurrentIndex);
+            if (result.IsExist)
+            {
+                m_CurrentIndex = result.Object;
+                Debug.Log($"[GridVisualizationSystem] UP - New index: {m_CurrentIndex}");
+                UpdateCurrentViewport();
+            }
+        }
+
+        private void OnNavigateDown()
+        {
+            var result = m_GridSystem.NavigateDown(m_CurrentIndex);
+            if (result.IsExist)
+            {
+                m_CurrentIndex = result.Object;
+                Debug.Log($"[GridVisualizationSystem] DOWN - New index: {m_CurrentIndex}");
+                UpdateCurrentViewport();
+            }
+        }
+
+        private void OnNavigateLeft()
+        {
+            var result = m_GridSystem.NavigateLeft(m_CurrentIndex);
+            if (result.IsExist)
+            {
+                m_CurrentIndex = result.Object;
+                Debug.Log($"[GridVisualizationSystem] LEFT - New index: {m_CurrentIndex}");
+                UpdateCurrentViewport();
+            }
+        }
+
+        private void OnNavigateRight()
+        {
+            var result = m_GridSystem.NavigateRight(m_CurrentIndex);
+            if (result.IsExist)
+            {
+                m_CurrentIndex = result.Object;
+                Debug.Log($"[GridVisualizationSystem] RIGHT - New index: {m_CurrentIndex}");
+                UpdateCurrentViewport();
+            }
+        }
+
+        private void UpdateCurrentViewport()
+        {
+            var viewportResult = m_GridSystem.GetViewportData(m_CurrentIndex, m_VisualConfig.GridSize);
+            if (viewportResult.IsExist)
+            {
+                UpdateCubesColors(viewportResult.Object);
+            }
         }
 
         public void UpdateCubesColors(int[] gridData)
@@ -187,6 +271,8 @@ namespace Core.GridSystem.External
 
         public void Dispose()
         {
+            m_Disposables?.Dispose();
+
             if (m_GridContainer != null)
             {
                 DestroyImmediate(m_GridContainer);
@@ -197,6 +283,11 @@ namespace Core.GridSystem.External
             m_MaterialCache?.Clear();
             
             Debug.Log("[GridVisualizationSystem] Disposed");
+        }
+
+        private void OnDestroy()
+        {
+            Dispose();
         }
     }
 }
