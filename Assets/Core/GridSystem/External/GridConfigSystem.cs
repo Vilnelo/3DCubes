@@ -21,27 +21,8 @@ namespace Core.GridSystem.External
 
         public void Initialize()
         {
-            Debug.LogError("[GridConfigSystem] Initialize called!");
             m_TextParser = new GridTextParser();
             LoadGridData();
-
-            TestMethod();
-        }
-
-        private void TestMethod()
-        {
-            Debug.LogError("загрузилась система сетки");
-
-            var index = GetRandomValidIndex();
-            
-            Debug.LogError($"index: {index.Object}");
-
-            var view = GetViewportData(index.Object, 3);
-
-            foreach (var value in view.Object)
-            {
-                Debug.LogError($"value: {value}");
-            }
         }
 
         public void LoadGridData()
