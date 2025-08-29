@@ -9,25 +9,21 @@ namespace Common.InputSystem.External
         {
             if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
             {
-                Debug.LogError("W");
                 return InputResult.Up;
             }
 
             if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow))
             {
-                Debug.LogError("S");
                 return InputResult.Down;
             }
 
             if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow))
             {
-                Debug.LogError("A");
                 return InputResult.Left;
             }
 
             if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
             {
-                Debug.LogError("D");
                 return InputResult.Right;
             }
 
